@@ -136,6 +136,7 @@ SC_MODULE(Filter) {
 	sc_fifo_in<int32_t>  inp;
 	sc_fifo_out<int32_t> outp;
 	sc_in<bool> clk;
+	sc_in<bool> rst;
 
     // The filter process
 	void filterTokens();
@@ -148,6 +149,7 @@ SC_MODULE(Filter) {
     // The module constructor
 	SC_CTOR(Filter) {
 		SC_CTHREAD(filterTokens, clk.pos());
+		reset_signal_is(rst, true);
 	}
 };
 

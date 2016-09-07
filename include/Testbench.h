@@ -38,6 +38,8 @@ SC_MODULE(Testbench) {
 
     // The modules
     sc_clock clock;
+	sc_signal<bool> reset = false;
+	// int reset = false ---> Falls die Zeile darüber nicht funktioniert 
 
     Producer     producer;
     Filter	 filter;
@@ -70,6 +72,7 @@ SC_MODULE(Testbench) {
 
 		producer.clk(clock);
 		filter.clk(clock);
+		filter.rst(reset);
 		consumer.clk(clock);
 	}
 };
