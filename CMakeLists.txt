@@ -34,9 +34,9 @@ set(HW_OUTPUT_FIFO "${CMAKE_BINARY_DIR}/HW_FIFO_OUT")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 # This is required to allow the type casts in the minimp3
 add_definitions("-fpermissive")
-
 
 # ------------------------ SystemC Model -------------------------------------
 #
@@ -61,9 +61,9 @@ add_executable(model
 add_executable(player
     "${CMAKE_SOURCE_DIR}/src/minimp3.cpp"
     "${CMAKE_SOURCE_DIR}/src/player_alsa.cpp"
+
 )
 # ----------------------------------------------------------------------------
-
 
 # Link the player against libasound
 target_link_libraries(player asound)
@@ -101,17 +101,19 @@ add_custom_command(
     COMMAND
         "${Vivado_HLS_EXECUTABLE}"
         "-f" "${CMAKE_SOURCE_DIR}/tcl/setup.tcl"
+    DEPENDS model
 )
 
 
 # Start the High-Level Synthesis
 add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/hls/solution1/syn"
+    OUTPUT "${CMAKE_BINARY_DIR}/hls/solution1/syn/vhdl/Filter.vhd"
     COMMAND "echo" " * Starting High-Level Synthesis"
     COMMAND
         "${Vivado_HLS_EXECUTABLE}"
         "-f" "${CMAKE_SOURCE_DIR}/tcl/csynth.tcl"
     DEPENDS "${CMAKE_BINARY_DIR}/hls/vivado_hls.app"
+#    DEPENDS model
 )
 
 
@@ -123,37 +125,22 @@ add_custom_command(
         "${Vivado_HLS_EXECUTABLE}"
         "-f" "${CMAKE_SOURCE_DIR}/tcl/cosim.tcl"
     DEPENDS
-        "${CMAKE_BINARY_DIR}/hls/solution1/syn"
+        "${CMAKE_BINARY_DIR}/hls/solution1/syn/vhdl/Filter.vhd"
         player
         ${HW_INPUT_FIFO} ${HW_OUTPUT_FIFO}
 )
 
 
-# Start the RTL Co-Simulation
+# Export the Vivado IP package
 add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/hls/solution1/impl"
-    COMMAND "echo" " * Exporting IP package"
+    OUTPUT "${CMAKE_BINARY_DIR}/hls/solution1/impl/ip/xilinx_com_hls_Filter_1_0.zip"
+    COMMAND "echo" " * Exporting Vivado IP package"
     COMMAND
         "${Vivado_HLS_EXECUTABLE}"
         "-f" "${CMAKE_SOURCE_DIR}/tcl/export.tcl"
     DEPENDS
-        "${CMAKE_BINARY_DIR}/hls/solution1/syn"
+        "${CMAKE_BINARY_DIR}/hls/solution1/syn/vhdl/Filter.vhd"
 )
-
-
-
-add_custom_target(hls
-    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/syn"
-)
-
-add_custom_target(cosim
-    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/sim"
-)
-
-add_custom_target(export
-    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/impl"
-)
-
 
 
 # Setup Vivado RTL project
@@ -161,10 +148,46 @@ add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/rtl/rtl.xpr"
     COMMAND "echo" " * Creating Vivado project"
     COMMAND "${Vivado_EXECUTABLE}" "-nolog" "-nojournal" "-mode" "batch" "-source"
-            "${CMAKE_SOURCE_DIR}/xillybus/vhdl/xillydemo-vivado.tcl"
-    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/impl"
+            "${CMAKE_SOURCE_DIR}/tcl/setup_rtl.tcl"
+    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/impl/ip/xilinx_com_hls_Filter_1_0.zip"
+)
+
+
+
+# Run Vivado RTL Synthesis
+add_custom_command(
+    OUTPUT "${CMAKE_BINARY_DIR}/rtl/rtl.runs/impl_1/xillydemo.bit"
+    COMMAND "echo" " * Starting Vivado RTL Synthesis"
+    COMMAND "${Vivado_EXECUTABLE}" "-nolog" "-nojournal" "-mode" "batch" "-source"
+            "${CMAKE_SOURCE_DIR}/tcl/rtl.tcl"
+    DEPENDS "${CMAKE_BINARY_DIR}/rtl/rtl.xpr"
+)
+
+
+add_custom_target(hls_setup
+    DEPENDS "${CMAKE_BINARY_DIR}/hls/vivado_hls.app"
+)
+
+add_custom_target(hls
+    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/syn/vhdl/Filter.vhd"
+)
+
+add_custom_target(cosim
+    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/sim"
+)
+
+add_custom_target(export
+    DEPENDS "${CMAKE_BINARY_DIR}/hls/solution1/impl/ip/xilinx_com_hls_Filter_1_0.zip"
+)
+
+add_custom_target(rtl_setup
+    DEPENDS "${CMAKE_BINARY_DIR}/rtl/rtl.xpr"
 )
 
 add_custom_target(rtl
-    DEPENDS "${CMAKE_BINARY_DIR}/rtl/rtl.xpr"
+    DEPENDS "${CMAKE_BINARY_DIR}/rtl/rtl.runs/impl_1/xillydemo.bit"
 )
+
+
+
+

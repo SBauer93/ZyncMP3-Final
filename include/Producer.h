@@ -44,7 +44,8 @@ SC_MODULE(Producer){
 		SC_THREAD(produceTokens);
 		sensitive << clk.pos();
         
-        pipe.open("./HW_FIFO_OUT", fstream::binary);
+        // pipe.open(f_out, fstream::binary);
+	// "../HW_FIFO_OUT"
 	}
 };
 

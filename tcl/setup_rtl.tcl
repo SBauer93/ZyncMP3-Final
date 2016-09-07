@@ -1,6 +1,7 @@
 # Xillydemo project generation script for Vivado 2014.4 and up
 
-set origin_dir [file dirname [info script]]
+set script_dir [file dirname [info script]]
+set origin_dir [file normalize "$script_dir/../xillybus/vhdl"]
 
 if {[string first { } $origin_dir] >= 0} {
 send_msg_id xillydemo-1 error "The path to the the project directory contains white space(s): \"$origin_dir\". This is known to cause problems with Vivado. Please move the project to a path without white spaces, and try again."
@@ -135,6 +136,4 @@ set_msg_config -new_severity "INFO" -id {Netlist 29-160} -string {{vivado_system
 
 puts "INFO: Project created"
 
-# Uncomment the two following lines for a full implementation
-launch_runs -jobs 8 impl_1 -to_step write_bitstream
-wait_on_run impl_1
+exit

@@ -26,6 +26,8 @@
 #include "libc.h"
 #include "minimp3.h"
 #include <fstream>
+#include <algorithm>
+#include <vector>
 #include <iostream>
 
 using std::cout;
@@ -33,6 +35,7 @@ using std::endl;
 
 std::ifstream fs_in;
 std::ofstream fs_out;
+std::fstream logger;
 
 #define MP3_FRAME_SIZE 1152
 #define MP3_MAX_CODED_FRAME_SIZE 1792
@@ -1534,37 +1537,6 @@ static int huffman_decode(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void imdct12_hw(int *out, int *in)
-{
-    int in_buf[16] = { 0 };
-    int out_buf[12] = { 0 };
-
-	copy(begin(in), end(in), begin(in_buf));
-	//for (int i = 0; i < 16; i++) {
-	//	if (in_buf[i] != in[i]) {
-	//		cout << "in and in_buf are unequal !" << endl;
-	//	}
-	//}
-    
-    cout << "Player: imdct12_hw()" << endl;
-
-	// Write 16 elements of in[] to hardware
-	// printf("minimp3 : imdct12 reached, ready to write");
-	fs_out.write((char*) in, sizeof(int32_t)*16);
-	fs_out.flush();	    
-
-	imdct12_sw(out_buf, in_buf);
-
-	// Read 12 elements from hardware into out[]
-	fs_in.read((char*) out, 12 * sizeof(int32_t));
-
-	for (int j = 0; j < 12; j++) {
-		if (out_buf[j] != out[j]) {
-			cout << "Element " << j << "is different !" << endl;
-			// cout << "Difference : " << (out_buf[j] - out[j]) << endl; 
-		}
-	}
-}
 
 static void imdct12_sw(int *out, int *in)
 {
@@ -1605,6 +1577,35 @@ static void imdct12_sw(int *out, int *in)
     out[ 5]= in0 - in5;
     out[ 6]=
     out[11]= in0 + in5;
+}
+
+static void imdct12_hw(int *out, int *in)
+{
+    int in_buf[16] = { 0 };
+    int out_buf[12] = { 0 };
+
+    // std::copy(std::begin(&in), std::end(&in), std::begin(in_buf));
+	for (int i = 0; i < 16; i++) {
+		in_buf[i] = in[i]; 
+	}
+
+
+	// Write 16 elements of in[] to hardware
+	// printf("minimp3 : imdct12 reached, ready to write");
+	fs_out.write((char*) in, sizeof(int32_t)*16);
+	fs_out.flush();	    
+
+	imdct12_sw(out_buf, in_buf);
+
+	// Read 12 elements from hardware into out[]
+	fs_in.read((char*) out, 12 * sizeof(int32_t));
+
+    std::cout << "PLAYER: ##################################################################" << std::endl;
+	for (int j = 0; j < 12; j++) {
+		if (out_buf[j] != out[j]) {
+			cout << "Difference : " << (out_buf[j] - out[j]) << endl; 
+		}
+	}
 }
 
 static void imdct36(int *out, int *buf, int *in, int *win)
@@ -1692,13 +1693,23 @@ static void compute_imdct(mp3_context_t *s, granule_t *g,
     int32_t out2[12];
     int i, j, mdct_long_end, v, sblimit;
 
+    if(!logger.is_open()) {
+	logger.open("log.txt", std::fstream::out | std::fstream::app);
+    }
+
+	
     /* Open UNIX pipes */
-    if (!fs_out.is_open())
-        fs_out.open("./HW_FIFO_OUT", std::fstream::binary);
-    
-    if (!fs_in.is_open())
-        fs_in.open("./HW_FIFO_IN", std::fstream::binary);
-    
+    if (!fs_out.is_open()) {
+	    cout << "Opening HW_FIFO_OUT" << endl;
+        fs_out.open("HW_FIFO_OUT", std::fstream::binary | std::fstream::out);
+	    cout << "HW_FIFO_OUT is open" << endl;
+    }
+    	
+    if (!fs_in.is_open()) {
+	    cout << "Opening HW_FIFO_IN" << endl;
+        fs_in.open("HW_FIFO_IN", std::fstream::binary | std::fstream::in);
+	    cout << "HW_FIFO_IN is open" << endl;
+    }
 
     /* find last non zero block */
     ptr = g->sb_hybrid + 576;

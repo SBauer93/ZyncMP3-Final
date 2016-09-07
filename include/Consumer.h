@@ -38,13 +38,13 @@ SC_MODULE(Consumer){
     // The consumer process
 	void consumeTokens();
 
-
     // The module constructor
 	SC_CTOR(Consumer) {
 		SC_THREAD(consumeTokens);
 		sensitive << clk.pos();
-        
-        pipe.open("./HW_FIFO_IN", fstream::binary);
+       
+        // pipe.open(f_in, fstream::binary);
+	// "./HW_FIFO_IN"
 	}
 };
 

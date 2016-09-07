@@ -39,9 +39,9 @@ SC_MODULE(Testbench) {
     // The modules
     sc_clock clock;
 
-	Producer producer;
+    Producer     producer;
     Filter	 filter;
-    Consumer consumer;
+    Consumer     consumer;
 
 
     // The communication channels
@@ -54,10 +54,10 @@ SC_MODULE(Testbench) {
 	    // Initialize modules and channels
 		: clock		("my_clock", 10 ,SC_NS, 0.5, 1, SC_NS)
 		, producer	("producer")
-        , filter	("filter")
-        , consumer	("consumer")
+        	, filter	("filter")
+        	, consumer	("consumer")
 		, channelIn	("channelIn", 4096)
-		, channelOut("channelOut", 4096) {
+		, channelOut    ("channelOut", 4096) {
 
 		
 		// Connect producer and filter via channelIn

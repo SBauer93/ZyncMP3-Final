@@ -33,7 +33,7 @@ void Consumer::consumeTokens()
 {    
     int buf[12];
     unsigned int blk = 0;
-    
+
     cout << "Consumer: starting up" << endl;
 
 	while (true) {

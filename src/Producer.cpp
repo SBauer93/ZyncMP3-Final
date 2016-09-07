@@ -3,7 +3,7 @@
  *
  * Systemc producer module.
  *
- * Author:  Benz Rudolf (Uni Rostock)
+ * Author:  Jens Rudolf (Uni Rostock)
  * Date:    2015-24-05
  *
  *
@@ -28,13 +28,12 @@ using std::endl;
 
 extern sc_event block_written;
 
-
 // The producer process
 void Producer::produceTokens()
 {
     int32_t buf[16];
     unsigned int blk = 0;
-        
+
     while(true) {
         
         // Read one block from file and write it to FIFO

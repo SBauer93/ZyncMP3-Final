@@ -22,9 +22,10 @@ set PROJECT_NAME hls
 open_project ${PROJECT_NAME}
 open_solution "solution1"
 
+set bindir [pwd]
 # Run RTL Cosimulation
 exec [pwd]/player ../Suerte.mp3 &
-cosim_design -O -trace_level none -rtl systemc
+cosim_design -O -trace_level none -rtl systemc -argv "$bindir/HW_FIFO_OUT $bindir/HW_FIFO_IN"
 
 # Close project and exit Vivado
 close_project
